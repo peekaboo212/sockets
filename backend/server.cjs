@@ -1,17 +1,30 @@
 const express = require('express');
 const { createServer } = require("http");
-const { Server } = require("socket.io")
+const realtimeServer = require("./realtimeServer.cjs");
+const path = require("path");
+const cookieParser = require("cookie-parser")
+// const router = require("./routes/index.cjs")
 
 const app = express();
 const httpServer = createServer(app);
-const io = new Server(httpServer);
 
-app.get("/", (req, res) => {
-    res.sendFile(__dirname + "/views/index.html");
+// Settings
+app.set("port", process.env.PORT || 3000);
+app.set("views", path.join(__dirname, "views"));
+app.use(cookieParser())
+
+// Routes
+app.use( require("./routes/index.cjs") );
+// router(app)
+// app.use('/app', express.static('public')); 
+
+// Public
+app.use( express.static( path.join(__dirname, "public")));
+
+// Levantar servidor
+httpServer.listen(app.get("port"), () => {
+    console.log("El servidor esta corriendo en el puerto", app.get("port"));
 });
 
-io.on("connection", socket => {
-    console.log(socket);
-});
-
-httpServer.listen(3000);
+// Llamo al servidor de Socket.io
+realtimeServer(httpServer);
